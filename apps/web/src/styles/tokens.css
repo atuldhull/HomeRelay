@@ -1,0 +1,103 @@
+/* Design tokens. Components use these names only: no hard-coded colours, sizes or durations.
+   v5: a semantic layer (canvas/surface/text/border/state/entity) with the older names kept as aliases. */
+:root {
+  /* ---- palette (raw) ---- */
+  --evergreen-950: #082219; --evergreen-900: #0c3128; --evergreen-800: #123e33; --evergreen-700: #185244; --evergreen-600: #1f6a57;
+  --jade-500: #2a8c73; --jade-200: #bfe2d4; --jade-100: #dcefe7; --jade-50: #eef7f2;
+  --parchment-50: #fbf9f3; --parchment-100: #f5f1e6; --parchment-200: #ece6d6; --parchment-300: #ddd5c0;
+  --amber-600: #a85d22; --amber-500: #c27a33; --amber-100: #f7e7d4;
+  --ink-900: #13221d; --ink-700: #384a43; --ink-500: #5f716a; --ink-300: #9aa8a2;
+
+  /* ---- semantic: canvas and surfaces (three tiers) ---- */
+  --canvas: var(--parchment-100);          /* page background */
+  --surface-1: var(--parchment-50);        /* work surfaces: panels, lists */
+  --surface-2: #ffffff;                    /* raised: inputs, cards that need lift */
+  --surface-sunk: var(--parchment-200);    /* wells: hover, tracks, code */
+  --surface-inverse: var(--evergreen-900); /* navigation, primary buttons */
+
+  /* ---- semantic: text ---- */
+  --text-1: var(--ink-900);  /* primary */
+  --text-2: var(--ink-700);  /* secondary */
+  --text-3: var(--ink-500);  /* metadata */
+  --text-disabled: var(--ink-300);
+  --text-inverse: #f4f1e7;
+
+  /* ---- semantic: borders ---- */
+  --border-1: #e6e0cf;  /* hairlines between items */
+  --border-2: #d6cfba;  /* control outlines */
+
+  /* ---- semantic: state ---- */
+  --accent: var(--jade-500);        --accent-soft: var(--jade-100);
+  --attention: var(--amber-600);    --attention-soft: var(--amber-100);
+  --success: #1f6f48;               --success-soft: #dcefe3;
+  --danger: #a8332a;                --danger-soft: #f8e1de;
+  --info: #2b5d9e;                  --info-soft: #e1ebf7;
+  --warning: #8a5a00;               --warning-soft: #fbefd0;
+
+  /* ---- semantic: entities (the same everywhere: map, search, assistant, timeline) ---- */
+  --entity-situation: #185244; --entity-situation-soft: #dcefe7;
+  --entity-task: #b0641f;      --entity-task-soft: #f7e7d4;
+  --entity-document: #4b55a0;  --entity-document-soft: #e4e6f5;
+
+  /* ---- aliases kept for existing components ---- */
+  --paper: var(--canvas); --paper-2: var(--surface-sunk); --surface: var(--surface-1); --surface-raised: var(--surface-2);
+  --line: var(--border-2); --line-soft: var(--border-1);
+  --ink: var(--text-1); --ink-2: var(--text-2); --ink-3: var(--text-3); --ink-inverse: var(--text-inverse);
+  --forest: var(--evergreen-900); --forest-2: var(--evergreen-800); --forest-3: var(--evergreen-700);
+  --jade: var(--jade-500); --jade-soft: var(--jade-100); --mint: var(--jade-200);
+  --copper: var(--amber-600); --copper-soft: var(--amber-100);
+  --st-open: var(--attention);   --st-open-bg: var(--attention-soft);
+  --st-progress: #1f7d66;        --st-progress-bg: var(--jade-100);
+  --st-blocked: var(--danger);   --st-blocked-bg: var(--danger-soft);
+  --st-done: var(--success);     --st-done-bg: var(--success-soft);
+  --st-muted: #5d6b66;           --st-muted-bg: #e9e6da;
+  --st-info: var(--info);        --st-info-bg: var(--info-soft);
+  --cat-delivery: var(--amber-600);  --cat-delivery-bg: var(--amber-100);
+  --cat-maintenance: var(--jade-500); --cat-maintenance-bg: var(--jade-100);
+  --cat-family_visit: #5a64a8;   --cat-family_visit-bg: #e4e6f5;
+  --cat-general: #5d6b66;        --cat-general-bg: #e9e6da;
+
+  /* ---- type ---- */
+  --font-display: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
+  --font-body: "Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: ui-monospace, "Cascadia Mono", Consolas, monospace;
+  --fs-xs: 12px;      /* metadata, labels */
+  --fs-sm: 13.5px;    /* supporting text, buttons */
+  --fs-md: 15px;      /* body */
+  --fs-lg: 17px;      /* card titles */
+  --fs-xl: 21px;      /* section titles */
+  --fs-2xl: 30px;     /* page titles */
+  --fs-hero: clamp(26px, 3.2vw, 36px);
+  --fs-metric: 26px;
+  --lh-tight: 1.15; --lh-snug: 1.3; --lh-body: 1.5;
+
+  /* ---- space (4-pt scale) ---- */
+  --sp-1: 4px; --sp-2: 8px; --sp-3: 12px; --sp-4: 16px; --sp-5: 24px; --sp-6: 32px; --sp-7: 48px;
+
+  /* ---- shape ---- */
+  --r-xs: 6px; --r-sm: 8px; --r-md: 10px; --r-lg: 14px; --r-xl: 20px; --r-pill: 999px;
+
+  /* ---- elevation: flat by default, three tiers when something must float ---- */
+  --shadow-0: none;
+  --shadow-1: 0 1px 2px rgba(16, 33, 28, .05);
+  --shadow-2: 0 1px 2px rgba(16, 33, 28, .05), 0 8px 24px rgba(16, 33, 28, .08);
+  --shadow-3: 0 24px 64px rgba(8, 28, 22, .28);
+  --focus: #2a86d4;
+  --focus-ring: 0 0 0 3px color-mix(in srgb, var(--focus) 45%, transparent);
+
+  /* ---- layout ---- */
+  --topbar-h: 56px;
+  --content-w: 1240px;
+  --gutter: 28px;
+
+  /* ---- motion ---- */
+  --dur-fast: 120ms;  /* hover, press */
+  --dur: 200ms;       /* most transitions */
+  --dur-slow: 320ms;  /* overlays, reveals */
+  --ease: cubic-bezier(.2, .7, .2, 1);
+  --ease-in: cubic-bezier(.4, 0, 1, 1);
+}
+
+@media (max-width: 720px) {
+  :root { --gutter: 16px; --fs-2xl: 25px; --fs-xl: 19px; }
+}

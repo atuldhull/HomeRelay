@@ -1,0 +1,44 @@
+{
+  "name": "homerelay",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "concurrently -n mcp,api,web -c blue,green,magenta \"npm:dev:mcp\" \"npm:dev:api\" \"npm:dev:web\"",
+    "dev:mcp": "npm run dev -w @homerelay/mcp-server",
+    "dev:api": "npm run dev -w @homerelay/api",
+    "dev:web": "npm run dev -w @homerelay/web",
+    "build": "npm run typecheck && npm run build -w @homerelay/web",
+    "typecheck": "tsc -p apps/mcp-server --noEmit && tsc -p apps/api --noEmit && tsc -p apps/web --noEmit",
+    "lint": "npm run typecheck",
+    "test": "vitest run",
+    "test:mcp:smoke": "vitest run tests/mcp-smoke.test.ts",
+    "demo:reset": "tsx scripts/demo-reset.ts",
+    "eval": "vitest run tests/eval",
+    "test:e2e": "playwright test",
+    "bench": "tsx scripts/bench.ts",
+    "stop": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/stop-dev.ps1",
+    "demo:files": "tsx scripts/demo-files.ts",
+    "test:soak": "tsx scripts/soak.ts",
+    "test:soak:stop": "tsx scripts/soak-stop.ts"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.64.1",
+    "@types/better-sqlite3": "^7.6.13",
+    "@types/cors": "2.8.19",
+    "@types/express": "^5.0.0",
+    "@types/node": "^22.0.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@vitejs/plugin-react": "^6.1.2",
+    "concurrently": "^9.0.0",
+    "tsx": "^4.23.15",
+    "typescript": "^5.9.0",
+    "vite": "^8.3.5",
+    "vitest": "^5.0.5"
+  }
+}

@@ -1,0 +1,30 @@
+/* Motion: short, purposeful, transform/opacity only. Durations and easing come from tokens.css. */
+@keyframes rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+@keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes pop { from { opacity: 0; transform: scale(.96); } to { opacity: 1; transform: none; } }
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes shimmer { to { background-position: -200% 0; } }
+@keyframes toast-in { from { opacity: 0; transform: translateY(12px) scale(.98); } to { opacity: 1; transform: none; } }
+@keyframes toast-out { to { opacity: 0; transform: translateY(8px) scale(.98); } }
+@keyframes settled { 0% { background: #d6ece3; transform: scale(1); } 40% { transform: scale(1.012); } 100% { background: transparent; transform: none; } }
+@keyframes art-drop { from { opacity: 0; transform: translateY(-14px); } to { opacity: 1; transform: none; } }
+@keyframes art-tick { from { transform: rotate(-30deg); } to { transform: none; } }
+
+/* Entrance choreography: plays once per page load (the Dashboard only adds .reveal the first time). */
+.reveal { animation: rise var(--dur-slow) var(--ease) both; animation-delay: calc(var(--i, 0) * 70ms); }
+
+/* Task finished: a brief acknowledgement that is only rendered after the server confirmed completion. */
+.task.just-done { animation: settled 1.3s var(--ease) both; }
+
+.home-art .ha-package { animation: art-drop var(--dur-slow) var(--ease) 200ms both; transform-box: fill-box; }
+.home-art .ha-clock { transform-origin: 268px 62px; animation: art-tick 500ms var(--ease) 400ms both; }
+
+.feat-card:focus-visible, .scard:focus-visible, .att:focus-visible { outline-offset: 3px; }
+
+/* Reduced motion: keep every state change and focus cue, drop the movement. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .001ms !important; animation-delay: 0ms !important; animation-iteration-count: 1 !important; transition-duration: .001ms !important; scroll-behavior: auto !important; }
+  .sk { animation: none; }
+  .spinner { animation-duration: 1.6s !important; animation-iteration-count: infinite !important; } /* a slow spin still signals "working" */
+  .scard:hover, .feat-card:hover, .att:hover { transform: none; }
+}

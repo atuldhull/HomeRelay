@@ -1,0 +1,16 @@
+node_modules
+.data
+*.db
+*.db-wal
+*.db-shm
+.env
+.env.*
+!.env.example
+dist
+coverage
+playwright-report
+test-results
+*.log
+
+# local screenshots and run artifacts
+artifacts/
