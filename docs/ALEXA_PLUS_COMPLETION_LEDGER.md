@@ -78,4 +78,14 @@ Levels:
 | `.data/soak/2026-10-22T15-10-41-532Z` (local stack, ports 3300/3301) | Final code | Started 20:40 IST, planned 24 h, ends about 20:40 IST on 2026-10-23. Check with `npm run test:soak:status`. |
 | `.data/soak-remote/2026-10-22T15-10-42-322Z` (remote profile in Docker behind Caddy TLS) | Final code | Started 20:40 IST, planned 2 h. Result: see below. |
 
-Remote soak result: _pending; recorded when the run completes._
+Remote soak result (completed 2026-10-22 22:40 IST, 120 min, through Caddy TLS):
+
+| Measure | Result |
+|---|---|
+| Tool calls | 7,609, 0 errors, 0 reconnects |
+| Situations created and plans drafted | 238 |
+| Token refreshes | 11, 0 errors |
+| Refusal probes (no token, rotated-out token, `approve_plan`) | 347, 0 failures |
+| Latency p50 / p95 / p99 / max | 12 / 25 / 49 / 101 ms; 0 calls over 500 ms |
+
+**Passed.** It is a 2-hour run, not a 24-hour run.
