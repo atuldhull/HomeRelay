@@ -236,7 +236,7 @@ describe("schema migration v1 -> v2", () => {
     old.prepare(`INSERT INTO situations (id,title,category,status,created_at,updated_at) VALUES ('s1','Old','general','open','2026-01-01T00:00:00Z','2026-01-01T00:00:00Z')`).run();
     old.prepare(`INSERT INTO tasks (id,situation_id,title,status,created_at,updated_at) VALUES ('t1','s1','Old task','pending','2026-01-01T00:00:00Z','2026-01-01T00:00:00Z')`).run();
     migrate(old); migrate(old); // repeatable
-    expect(old.pragma("user_version", { simple: true })).toBe(4); // latest schema (v3 document vault, v4 standalone tasks + task documents)
+    expect(old.pragma("user_version", { simple: true })).toBe(5); // latest schema (v3 document vault, v4 standalone tasks + task documents, v5 remote-profile OAuth)
     expect(old.prepare("SELECT title, template_key FROM tasks WHERE id='t1'").get()).toEqual({ title: "Old task", template_key: null });
     old.close(); fs.rmSync(dir, { recursive: true, force: true });
   });

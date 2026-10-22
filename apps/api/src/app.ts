@@ -38,7 +38,7 @@ const createBody = z.object({
   initialTaskDueLocal: localDateTime.optional(),
 });
 
-export function createApp(gw: McpGateway, cfg: ApiConfig, opts?: { llmClient?: import("./agent/llm").LlmClient; uploadLimit?: number }) {
+export function createApp(gw: McpGateway, cfg: ApiConfig, opts?: { llmClient?: import("./agent/llm").LlmClient; uploadLimit?: number; /** chat requests per minute (default 60) */ chatRateLimit?: number }) {
   const app = express();
   app.disable("x-powered-by");
   app.use(securityGuards(cfg));
@@ -81,7 +81,7 @@ export function createApp(gw: McpGateway, cfg: ApiConfig, opts?: { llmClient?: i
   app.get("/api/situations/:id/activity", wrap(async (req, res) => { res.json(await gw.call("get_activity_log", { situation_id: req.params.id, limit: 200 }, via)); }));
   app.get("/api/activity", wrap(async (_req, res) => { res.json(await gw.call("get_activity_log", { limit: 100 }, via)); }));
 
-  app.post("/api/chat", rateLimit(60, 60_000), wrap(async (req, res) => {
+  app.post("/api/chat", rateLimit(opts?.chatRateLimit ?? 60, 60_000), wrap(async (req, res) => {
     const body = parse(chatBody, req.body);
     const out: ChatResponse = await handleChat({ gw, cfg, now: () => new Date(), llmClient: opts?.llmClient }, { message: body.message, activeSituationId: body.activeSituationId ?? null, activeDocumentId: body.activeDocumentId ?? null, activeTaskId: body.activeTaskId ?? null });
     res.json(out);

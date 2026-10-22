@@ -50,12 +50,43 @@ It is **not** proof that a human clicked. What stops other websites and scripts 
 2. The MCP SDK's argument-validation errors were reported by the API as a vague `BAD_RESPONSE` 500 instead of `INVALID_INPUT` 400.
 3. Before this review the API had no browser-origin protection (see CSRF row above); an attacker who knew a proposal id could have approved it from a web page.
 
+## Release hardening review (2026-10-22)
+
+Scope: every API route, MCP tool, internal file endpoint, upload path, the built web app's headers, and race conditions on approvals, uploads, recurrence and reset. Trust model unchanged: one local user, services bound to 127.0.0.1, `APPROVAL_SECRET` is service-to-service only.
+
+| Finding | Severity | Status | Test |
+|---|---|---|---|
+| Concurrent identical uploads produced an internal error instead of `DUPLICATE` | Low (no data loss; file cleaned up) | Fixed: checks repeated inside the write transaction | `documents.test.ts` |
+| A pending plan could be approved after its situation was resolved, creating tasks in a closed situation | Medium (integrity) | Fixed: resolution supersedes pending plans; approval refuses resolved situations | `domain.test.ts` |
+| Unbounded total document storage (disk exhaustion) | Medium (availability) | Fixed: `DOCUMENT_STORAGE_MAX_MB` quota, `STORAGE_FULL` 507 | `documents.test.ts` |
+| No Content-Security-Policy on the app pages | Medium (defence in depth against XSS) | Fixed for the production build (`vite preview` headers: strict CSP, nosniff, no-referrer, permissions policy). The dev server stays without CSP because Vite's hot-reload preamble is inline. | verified in Chrome (no violations) |
+| Recurrence duplicates on retry/restart | — | Already prevented (`recurrence_of` UNIQUE); re-verified | `v4-connected.test.ts` |
+| Double approval | — | Already idempotent (`already_applied`); re-verified | `domain.test.ts`, 5-v4 C |
+| `npm audit` | — | 0 vulnerabilities on 2026-10-22 | — |
+
+Residual: no end-user authentication or multi-user isolation (by design for a local app); unencrypted data at rest; no malware scanning of uploads; the dev server has no CSP; a live LLM was not tested.
+
 ## Known limitations
 
 - No authentication, authorization levels or multi-user separation.
 - Data at rest is an unencrypted SQLite file and unencrypted document files in `.data/documents`.
 - No malware scanning of uploads.
-- Not reachable by Alexa+ or any remote client: there is no OAuth. See [ALEXA_PLUS_INTEGRATION.md](ALEXA_PLUS_INTEGRATION.md) before exposing anything.
-- No CSP, no HTTPS (local only).
+- The local servers (3000, 3001, 5173) remain loopback-only and unauthenticated. Remote access exists only through the separate remote profile below.
+
+## Remote profile (OAuth, added after the soak started; not soak-tested)
+
+- **Off by default.** It refuses to start without `REMOTE_PROFILE_ENABLED=true`, a scrypt owner-password hash and at least one static client. It binds to 127.0.0.1 and has its own Host allowlist (the public host and loopback only).
+- **Authorization server for one owner.** It supports authorization code + PKCE S256 only, with an exact redirect-URI match. Codes are single-use, live 60 s, and a replay revokes every token issued from that code. Refresh tokens rotate, and reuse revokes the whole family. Access tokens are bound to `<base>/mcp` and live 1 h. Only SHA-256 hashes of codes, tokens and client secrets are stored.
+- **Sign-in page.** CSRF double-submit (an HttpOnly SameSite=Strict cookie plus a hidden field), with requests held server-side for 10 min. CSP `default-src 'none'` with `form-action` limited to self and the registered redirect origin, and `frame-ancestors 'none'`. 5 wrong passwords lock sign-in for 15 min. Per-IP rate limits apply (`X-Forwarded-For` only with `REMOTE_TRUST_PROXY`).
+- **Least privilege.** 10 tools (read, plus create/constraints/propose). No approval, rejection, deletion, demo reset or document access. The actor is forced to `agent`. A remote client can only draft plans, and approval stays in the app. `APPROVAL_SECRET` is not used for identity, and the remote process generates a random one per request that never leaves it.
+- **Bugs found by the new tests and fixed:** (1) code-replay and refresh-reuse revocations were rolled back together with the error they raised; (2) a remote search asking only for documents fell back to searching every type, documents included.
+- **Container** (`deploy/`, verified 2026-10-22). It runs as non-root uid 1000 with a read-only root filesystem, `cap_drop: ALL`, `no-new-privileges` and an init process. It publishes only on 127.0.0.1. Configuration comes at run time from `deploy/remote.env` (git-ignored), and no secret is in the image (`docker image inspect` shows only paths and ports). The container never receives `APPROVAL_SECRET` or the LLM key. SIGTERM triggers a graceful close that checkpoints the WAL.
+- **Proxy** (Caddy). TLS with HSTS, a 1 MB request-body cap, and a path allowlist: only remote-profile paths are forwarded, everything else gets a 404. Verified over HTTPS with certificate verification on: an untrusted CA was refused, and the consent cookie was `Secure; HttpOnly; SameSite=Strict`.
+- **Public pages and assets.** `/privacy` and `/terms` have no scripts and `default-src 'none'`. `/assets/addon/` serves only `[a-z0-9-]+.png` from one folder (traversal attempts return 404).
+- **Logs.** One line per request with method, path without query, status and duration. Tests and a full container run confirmed that no token, code, state, password or client secret appears in the logs.
+- **Owner kill switch.** `remote:revoke-all` (or `remote-setup.js revoke-all` in the container) invalidates every code and token at once.
+- **Found while containerising:** Docker Compose expands `$` in unquoted `env_file` values, which silently corrupted the scrypt hash (`scrypt$N$salt$hash`) and made every sign-in fail. `remote:owner` now writes the value single-quoted, and the template and troubleshooting explain why.
+- **Limits:** single household only, with no multi-user identity or tenant isolation. In-memory lockout and rate-limit state resets on restart. Not yet tested against Amazon's real OAuth client.
+- No HTTPS (local only). CSP applies to the production build served by `vite preview`, not to the dev server.
 - Single process rate limiting.
 - Live LLM behaviour is unverified (no key was available), so prompt-injection resistance of a real model is untested.

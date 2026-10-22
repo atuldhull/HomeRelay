@@ -268,7 +268,7 @@ describe("migration v3 -> v4", () => {
     old.prepare("INSERT INTO tasks (id,situation_id,title,status,depends_on_task_id,created_at,updated_at) VALUES ('b','s','B','pending','a','t','t')").run();
     old.close();
     const db4 = openDb(file);
-    expect(db4.pragma("user_version", { simple: true })).toBe(4);
+    expect(db4.pragma("user_version", { simple: true })).toBe(5); // v4 rebuild, then v5 (OAuth tables)
     const rows = db4.prepare("SELECT id, situation_id, depends_on_task_id, priority, category, tags_json, recurrence FROM tasks ORDER BY id").all();
     expect(rows).toEqual([
       { id: "a", situation_id: "s", depends_on_task_id: null, priority: "normal", category: "general", tags_json: "[]", recurrence: "none" },

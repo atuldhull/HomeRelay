@@ -1,0 +1,19 @@
+# Local HTTPS rehearsal (compose profile "tls-local"): same routing as Caddyfile.example, certificate from Caddy's
+# internal CA, reachable only on https://localhost:8443 from this machine. Set REMOTE_BASE_URL=https://localhost:8443.
+{
+	local_certs
+	skip_install_trust
+}
+localhost:443 {
+	header Strict-Transport-Security "max-age=31536000"
+	request_body {
+		max_size 1MB
+	}
+	@remote path /mcp /oauth/* /.well-known/* /health /ready /privacy /terms /assets/addon/*
+	handle @remote {
+		reverse_proxy homerelay-remote:3002
+	}
+	handle {
+		respond 404
+	}
+}

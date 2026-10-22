@@ -18,6 +18,7 @@ try {
     tz: assertTimeZone(process.env.APP_TIMEZONE ?? DEFAULT_TZ),
     documentsDir: process.env.DOCUMENTS_DIR ? fromRoot(process.env.DOCUMENTS_DIR) : undefined,
     maxDocumentBytes: process.env.DOCUMENT_MAX_MB ? Math.round(Number(process.env.DOCUMENT_MAX_MB) * 1024 * 1024) : undefined,
+    maxDocumentStorageBytes: process.env.DOCUMENT_STORAGE_MAX_MB ? Math.round(Number(process.env.DOCUMENT_STORAGE_MAX_MB) * 1024 * 1024) : undefined,
   });
   console.log(`[mcp] HomeRelay MCP server (Streamable HTTP, spec 2025-11-25) listening on ${s.url}`);
   console.log(`[mcp] database: ${dbPath}`);

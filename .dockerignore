@@ -1,0 +1,17 @@
+# Keep data, secrets and build noise out of the image build context.
+.git
+**/node_modules
+.data
+.env
+.env.*
+!.env.example
+**/*.db
+**/*.db-wal
+**/*.db-shm
+artifacts
+test-results
+playwright-report
+coverage
+**/dist
+docs
+tests

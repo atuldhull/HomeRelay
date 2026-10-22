@@ -21,9 +21,10 @@ export interface McpAppOptions extends ToolConfig {
   /** Where uploaded files are stored (opaque names). Defaults to a "documents" folder next to the database. */
   documentsDir?: string;
   maxDocumentBytes?: number;
+  maxDocumentStorageBytes?: number;
 }
 
-const DOC_STATUS: Record<string, number> = { DUPLICATE: 409, TOO_LARGE: 413, UNSUPPORTED_TYPE: 415, INVALID_FILE: 400, INVALID_INPUT: 400, NOT_FOUND: 404 };
+const DOC_STATUS: Record<string, number> = { DUPLICATE: 409, TOO_LARGE: 413, STORAGE_FULL: 507, UNSUPPORTED_TYPE: 415, INVALID_FILE: 400, INVALID_INPUT: 400, NOT_FOUND: 404 };
 const header = (req: express.Request, name: string) => { const v = req.headers[name]; return typeof v === "string" ? v : ""; };
 const decode = (v: string) => { try { return decodeURIComponent(v); } catch { return ""; } };
 
@@ -32,7 +33,7 @@ export function createMcpApp(opts: McpAppOptions) {
   const svc = new HomeRelayService(db, { tz: opts.tz, now: opts.now });
   const documentsDir = opts.documentsDir
     ?? (opts.dbPath === ":memory:" ? path.join(os.tmpdir(), `homerelay-docs-${randomUUID()}`) : path.join(path.dirname(path.resolve(opts.dbPath)), "documents"));
-  const docs = new DocumentService(db, { dir: documentsDir, maxBytes: opts.maxDocumentBytes ?? DEFAULT_MAX_BYTES, now: opts.now });
+  const docs = new DocumentService(db, { dir: documentsDir, maxBytes: opts.maxDocumentBytes ?? DEFAULT_MAX_BYTES, maxTotalBytes: opts.maxDocumentStorageBytes, now: opts.now });
   const graph = new GraphService(db, svc, docs);
   const app = express();
   app.disable("x-powered-by");

@@ -19,7 +19,7 @@ The story: HomeRelay keeps how the household fits together. A delivery, its plan
 | 2:05 | **Assistant**: *What's on my plate today?*, then *Which tasks are blocked?* Click the task link in the answer. | "Answers come from tool calls against stored data, with links to the real records. Unfamiliar questions get a search of your records, not a list of example prompts." |
 | 2:30 | On *Buy a compatible water filter*: **Mark done** → **Yes, it is done**. Open *Replace the water filter*. | "Done only after the server accepts it. The dependent task is unblocked." |
 | 2:45 | **Home**: show **HomeRelay Pulse**. | "The briefing is computed from those same records: nothing invented, no score." |
-| 2:55 | Close on the developer panel (MCP tool calls). | "34 real MCP tools over Streamable HTTP. Not connected to Alexa+ yet; that needs Amazon's preview access, a public HTTPS endpoint and OAuth." |
+| 2:55 | Close on the developer panel (MCP tool calls). | "34 real MCP tools over Streamable HTTP. There's also an OAuth-protected remote profile, built to Amazon's account-linking spec and tested locally. It isn't connected to Alexa+ yet: that needs Amazon onboarding and a public HTTPS host." |
 
 ## Cut for time (show if there is room)
 *Show me everything connected to this maintenance issue* on a maintenance situation; *What is my fuse down?* (honest answer, safe advice); the phone layout; deleting an attached document (its links disappear from the map, the situation stays); **Reload** to show persistence.

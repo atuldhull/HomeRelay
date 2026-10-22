@@ -299,6 +299,7 @@ export class HomeRelayService {
       const bad = chosen.filter((x) => !allIds.includes(x));
       if (bad.length) throw new DomainError("INVALID_INPUT", `Unknown action id(s): ${bad.join(", ")}`);
       const sit = this.getSit(p.situation_id);
+      if (sit.status === "resolved") throw new DomainError("INVALID_STATE", "The situation is resolved; this plan can no longer be applied");
       const created: Task[] = []; const resched: Task[] = []; const skipped: string[] = []; const refMap = new Map<string, string>();
       this.log(p.situation_id, "plan_approved", `Plan approved (${chosen.length} of ${allIds.length} action(s))`, "user", { proposal_id: p.id, action_ids: chosen });
       for (const a of p.plan.actions.filter((x) => chosen.includes(x.id))) {
@@ -561,6 +562,11 @@ export class HomeRelayService {
         this.db.prepare("UPDATE tasks SET status='cancelled', updated_at=? WHERE id=?").run(this.ts(), t.id);
         this.log(situationId, "task_status_changed", `Task cancelled on closure: ${t.title}`, actor, { from: t.status, to: "cancelled" }, t.id);
         cancelled.push(this.getTask(t.id));
+      }
+      // a plan still awaiting a decision no longer applies once the situation is over
+      for (const p of this.db.prepare("SELECT id FROM plan_proposals WHERE situation_id=? AND status='proposed'").all(situationId) as { id: string }[]) {
+        this.db.prepare("UPDATE plan_proposals SET status='superseded', updated_at=? WHERE id=?").run(this.ts(), p.id);
+        this.log(situationId, "plan_superseded", "The proposed plan was retired because the situation was resolved", "system", { proposal_id: p.id, reason: "situation_resolved" });
       }
       const t = this.ts();
       this.db.prepare("UPDATE situations SET status='resolved', resolved_at=?, updated_at=? WHERE id=?").run(t, t, situationId);

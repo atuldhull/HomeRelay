@@ -200,3 +200,18 @@ describe("transactions and isolation", () => {
     });
   });
 });
+
+describe("stale proposals", () => {
+  it("resolving a situation retires its pending proposal, and that proposal can no longer be approved", () => {
+    const s = svc.simulateDeliveryEvent().situation;
+    svc.setConstraints(s.id, { available_from: FREE_6 });
+    const { proposal } = svc.proposePlan(s.id);
+    expect(proposal?.status).toBe("proposed");
+    svc.resolveSituation(s.id, { confirmed_by_user: true, close_outstanding: true });
+    const after = svc.getSituation(s.id).proposals.find((p) => p.id === proposal!.id)!;
+    expect(after.status).toBe("superseded");
+    expect(code(() => svc.approvePlan(proposal!.id))).toBe("INVALID_STATE");
+    expect(svc.getSituation(s.id).tasks).toHaveLength(0); // nothing was created in the resolved situation
+    expect(events(s.id)).toContain("plan_superseded");
+  });
+});

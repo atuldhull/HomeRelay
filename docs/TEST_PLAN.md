@@ -1,6 +1,6 @@
 # Test plan
 
-Run everything: `npm test` (vitest, 216 tests in 14 files, including the agent evaluation), `npm run test:e2e` (Playwright, 24 tests), `npm run test:soak -- --minutes 3` (isolated soak; see below), `npm run eval` (agent evaluation, 20 scenarios, report in `test-results/agent-eval-report.md`).
+Run everything: `npm test` (vitest, 219 tests in 14 files, including the agent evaluation), `npm run test:e2e` (Playwright, 28 tests), `npm run test:soak -- --minutes 3` (isolated soak; see below), `npm run eval` (agent evaluation, 20 scenarios, report in `test-results/agent-eval-report.md`).
 
 | Layer | File | Tests | Covers |
 |---|---|---|---|
@@ -43,6 +43,18 @@ Scenario A (upload → attach to a maintenance situation → create a task with 
 5. The CSV export asked `list_tasks` for more rows than the tool allows (same class of bug as v3's search limit).
 6. Expected behaviour changes were caught by the old suites: completed tasks reopening through a status change (kept terminal; reopen is explicit), and the eval's "pending" scenario (now also reads household tasks).
 
+## Release hardening (2026-10-22)
+
+Defects found by reviewing the code adversarially, each reproduced by a failing test first:
+
+1. **Concurrent duplicate upload:** two simultaneous uploads of the same file both passed the duplicate check (text extraction is async) and the second failed with a raw `SqliteError` (HTTP 500). The checks now run again inside the write transaction; the loser gets `DUPLICATE` and its file is removed (`documents.test.ts`).
+2. **Stale plan after resolution:** a proposal still awaiting a decision stayed `proposed` after its situation was resolved, and approving it created tasks in a resolved situation. Resolution now supersedes pending proposals (recorded as `plan_superseded`), and approval refuses a resolved situation (`domain.test.ts`).
+3. **Benchmark measured errors:** the chat benchmark exceeded the API's 60/min chat limit, so most timed calls were 429 responses (the "plan" figure was 6 ms instead of the real ~25 ms). The bench now fails on any non-2xx response and raises the limit for itself only (`createApp` option `chatRateLimit`).
+4. **No storage quota:** total vault size was unbounded. `DOCUMENT_STORAGE_MAX_MB` (default 2048) now refuses uploads with `STORAGE_FULL` (`documents.test.ts`).
+5. **Soak status after a reboot:** a killed run kept `"status": "running"`. `npm run test:soak:status` judges a run by its heartbeat.
+
+The production build's CSP was verified by serving it with `vite preview` against an isolated stack and driving every route, the assistant and the palette in Chrome: zero CSP violations, zero console errors.
+
 ## Soak test (`npm run test:soak`)
 
 Starts its own MCP server and API (ports 3201/3200) with a database and document folder under `.data/soak/<run>/`, then repeats a bounded cycle through the public API: dashboard, create a maintenance situation, create a dependent task pair and a household task, list tasks, upload and search a document, attach it to the situation and a task, read connections, the map (checks every edge has both ends) and global search, read activity, edit a task, confirm a blocked completion is refused, complete tasks, resolve, verify the persisted state, then delete that cycle's document and household task. Records request counts, error categories, latency percentiles per operation, process memory (Windows `tasklist` for the two pids it owns), restarts and exits, database and folder size. Declared success criteria: full duration, no unexpected exits, error rate < 0.1%, zero verification failures, memory growth < 2× (last sixth vs first sixth). It stops on its deadline, on `npm run test:soak:stop` (stop file) or on a signal, and writes `interrupted` in that case.
@@ -66,6 +78,7 @@ Starts its own MCP server and API (ports 3201/3200) with a database and document
 - Automated accessibility audit (axe); only role/label/keyboard/focus interactions are exercised. Screen-reader output was not listened to.
 - React component unit tests (covered through E2E).
 - The soak covers the API/MCP stack, not the browser; browser memory over long sessions was not measured.
+- There is no separate linter: `npm run lint` runs the TypeScript checks.
 - The PDF preview in headless Chrome renders as the empty viewer background; the iframe and headers are tested, the visual PDF render is not.
 - Real XHR upload progress is visible only for large files; the test slows the server to capture the in-flight state.
 - Multi-instance concurrency; load testing beyond `npm run bench`.

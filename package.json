@@ -24,7 +24,18 @@
     "stop": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/stop-dev.ps1",
     "demo:files": "tsx scripts/demo-files.ts",
     "test:soak": "tsx scripts/soak.ts",
-    "test:soak:stop": "tsx scripts/soak-stop.ts"
+    "test:soak:stop": "tsx scripts/soak-stop.ts",
+    "preview:web": "npm run preview -w @homerelay/web",
+    "test:soak:status": "tsx scripts/soak-status.ts",
+    "start:remote": "npm run start:remote -w @homerelay/mcp-server",
+    "remote:owner": "tsx scripts/remote-setup.ts owner",
+    "remote:client": "tsx scripts/remote-setup.ts client",
+    "backup": "tsx scripts/backup.ts",
+    "remote:revoke-all": "tsx scripts/remote-setup.ts revoke-all",
+    "restore": "tsx scripts/restore.ts",
+    "verify:remote": "tsx scripts/verify-remote.ts",
+    "brand:render": "tsx scripts/render-brand.ts",
+    "test:soak:remote": "tsx scripts/soak-remote.ts"
   },
   "devDependencies": {
     "@playwright/test": "1.64.1",

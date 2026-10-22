@@ -1,0 +1,18 @@
+# Public TLS front for the remote profile. Replace the hostname with a domain you control; Caddy obtains and renews
+# the certificate automatically. REMOTE_BASE_URL must then be exactly https://homerelay.example.com, and
+# REMOTE_TRUST_PROXY=true so rate limits see the real client address.
+# Only the remote profile is exposed: the local MCP server (3001), API (3000) and web app (5173) stay on loopback.
+homerelay.example.com {
+	encode gzip
+	header Strict-Transport-Security "max-age=31536000"
+	request_body {
+		max_size 1MB
+	}
+	@remote path /mcp /oauth/* /.well-known/* /health /ready /privacy /terms /assets/addon/*
+	handle @remote {
+		reverse_proxy 127.0.0.1:3002
+	}
+	handle {
+		respond 404
+	}
+}

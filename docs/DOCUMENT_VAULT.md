@@ -7,7 +7,7 @@ Receipts, warranties, manuals, delivery slips, service records, photos and notes
 | Capability | How |
 |---|---|
 | Upload | **Documents** page: drag and drop or **Upload files** (several at once), with per-file progress from the browser's real upload events. From a situation: **Upload & attach**. |
-| Accepted files | PDF, PNG, JPEG, TXT, Markdown. Up to `DOCUMENT_MAX_MB` each (default 10). The type is decided by the file's **content signature**, not its name or the browser's claim. Anything else is refused with a reason and nothing is stored. |
+| Accepted files | PDF, PNG, JPEG, TXT, Markdown. Up to `DOCUMENT_MAX_MB` each (default 10) and `DOCUMENT_STORAGE_MAX_MB` in total (default 2048; a full vault refuses uploads with `STORAGE_FULL`, HTTP 507). The type is decided by the file's **content signature**, not its name or the browser's claim. Anything else is refused with a reason and nothing is stored. |
 | Duplicates | Detected by SHA-256 of the content. The upload is refused with the existing document's title, and the existing document is kept. |
 | Category | Chosen on upload, or **automatic**: a guess from the file name only (`warranty`, `receipt`/`invoice`/`bill`, `manual`/`instructions`, `delivery`/`courier`/`parcel`, `service`/`repair`, `note`). Images default to Photo, everything else to Other. Editable later. |
 | Text extraction | Local only. PDFs are read page by page with `unpdf`; text and Markdown are read directly. **No OCR**: images are stored and searchable by title, tags and description only, and the UI says so. Capped at 100,000 characters per page and 1,000,000 per document (marked as truncated). |

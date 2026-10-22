@@ -156,6 +156,37 @@ const MIGRATIONS: string[] = [
   CREATE INDEX idx_task_documents_document ON task_documents(document_id);
   CREATE INDEX idx_activity_task ON activity_events(task_id);
   `,
+  // v5 — OAuth for the opt-in remote profile. Only SHA-256 hashes of codes and tokens are stored, never the values.
+  `
+  CREATE TABLE oauth_codes (
+    code_hash TEXT PRIMARY KEY,
+    client_id TEXT NOT NULL,
+    redirect_uri TEXT NOT NULL,
+    code_challenge TEXT NOT NULL,
+    scope TEXT NOT NULL,
+    resource TEXT NOT NULL,
+    subject TEXT NOT NULL,
+    expires_at TEXT NOT NULL,
+    used_at TEXT,
+    created_at TEXT NOT NULL
+  );
+  CREATE TABLE oauth_tokens (
+    token_hash TEXT PRIMARY KEY,
+    kind TEXT NOT NULL CHECK (kind IN ('access','refresh')),
+    family_id TEXT NOT NULL,
+    code_hash TEXT,
+    client_id TEXT NOT NULL,
+    scope TEXT NOT NULL,
+    resource TEXT NOT NULL,
+    subject TEXT NOT NULL,
+    expires_at TEXT NOT NULL,
+    revoked_at TEXT,
+    replaced_at TEXT,
+    created_at TEXT NOT NULL
+  );
+  CREATE INDEX idx_oauth_tokens_family ON oauth_tokens(family_id);
+  CREATE INDEX idx_oauth_tokens_code ON oauth_tokens(code_hash);
+  `,
 ];
 
 export function openDb(file: string): Db {

@@ -86,7 +86,9 @@ describe("MCP over Streamable HTTP", () => {
     expect(sim.data.already_exists).toBe(false);
     expect((await call("simulate_delivery_event")).data.already_exists).toBe(true);
 
-    const freeAt = "2026-10-22T12:30:00.000Z";
+    // relative to now: fixed wall-clock dates stop producing a reschedule once they are in the past
+    const hour = 3600_000; const t0 = Math.ceil(Date.now() / hour) * hour;
+    const freeAt = new Date(t0 + 2 * hour).toISOString(); const extendedAt = new Date(t0 + 3 * hour).toISOString();
     expect((await call("set_constraints", { situation_id: sid, available_from: freeAt, nobody_else_home: true, actor: "user" })).isError).toBe(false);
     const plan = await call("propose_plan", { situation_id: sid });
     const pid = plan.data.proposal.id as string;
@@ -106,12 +108,12 @@ describe("MCP over Streamable HTTP", () => {
     expect(reader.prepare("SELECT COUNT(*) c FROM tasks WHERE situation_id=?").get(sid)).toEqual({ c: 3 });
 
     // Meeting extended -> replan -> reschedule.
-    await call("set_constraints", { situation_id: sid, available_from: "2026-10-22T13:30:00.000Z", actor: "user" });
+    await call("set_constraints", { situation_id: sid, available_from: extendedAt, actor: "user" });
     const re = await call("propose_plan", { situation_id: sid });
     expect(re.data.proposal.plan.actions.every((a: any) => a.type === "reschedule_task")).toBe(true);
     await call("approve_plan", { proposal_id: re.data.proposal.id, approval_token: SECRET });
     const follow = reader.prepare("SELECT due_at FROM tasks WHERE situation_id=? AND kind='followup'").get(sid) as any;
-    expect(follow.due_at).toBe("2026-10-22T13:30:00.000Z");
+    expect(follow.due_at).toBe(extendedAt);
 
     const log = await call("get_activity_log", { situation_id: sid });
     const types = log.data.events.map((e: any) => e.event_type);

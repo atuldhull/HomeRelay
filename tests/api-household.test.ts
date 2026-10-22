@@ -120,7 +120,7 @@ describe("MCP contract for the v4 tools", () => {
     const detail = await call("get_task", { task_id: tid });
     expect(detail.structuredContent.task.title).toBe("Defrost the freezer");
     const none = await call("search_household", { query: "zz-no-such-thing" });
-    expect(none.structuredContent).toEqual({ results: [], message: "Nothing in your situations, tasks or documents matches that." }); // empty still answers
+    expect(none.structuredContent).toEqual({ results: [], message: "Nothing in your records matches that." }); // empty still answers
     expect(tools.find((t) => t.name === "get_household_map")!.outputSchema?.type).toBe("object");
     const found = await call("search_household", { query: "freezer" });
     expect(found.structuredContent.results[0].id).toBe(tid);

@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 900" width="600" height="900" font-family="Segoe UI, system-ui, sans-serif">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f7f3e8"/><stop offset="1" stop-color="#ece5d2"/></linearGradient>
+    <linearGradient id="teal" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#287570"/><stop offset="1" stop-color="#174a47"/></linearGradient>
+    <filter id="sh" x="-10%" y="-10%" width="120%" height="130%"><feDropShadow dx="0" dy="6" stdDeviation="10" flood-color="#13221d" flood-opacity=".12"/></filter>
+  </defs>
+  <rect width="600" height="900" fill="url(#bg)"/>
+  <g transform="translate(48 56)">
+    <rect width="64" height="64" rx="16" fill="url(#teal)"/>
+    <g transform="scale(.25)"><path d="M60 124 128 62l68 62v62a10 10 0 0 1-10 10H70a10 10 0 0 1-10-10z" fill="none" stroke="#fffdf9" stroke-width="15" stroke-linejoin="round"/><path d="M98 168 128 138l30 30" fill="none" stroke="#fffdf9" stroke-width="7" stroke-linecap="round"/><circle cx="98" cy="168" r="12" fill="#fffdf9"/><circle cx="128" cy="138" r="12" fill="#fffdf9"/><circle cx="158" cy="168" r="12" fill="#fffdf9"/><circle cx="196" cy="66" r="20" fill="#f2b84b"/></g>
+    <text x="84" y="44" font-size="36" font-weight="700" fill="#13221d">HomeRelay</text>
+  </g>
+  <text x="48" y="190" font-size="40" font-weight="700" fill="#13221d">Your household,</text>
+  <text x="48" y="238" font-size="40" font-weight="700" fill="#1f5f5b">kept in step.</text>
+  <text x="48" y="282" font-size="20" fill="#4a5a54">Situations, tasks and plans that adapt</text>
+  <text x="48" y="310" font-size="20" fill="#4a5a54">when your day changes.</text>
+
+  <g filter="url(#sh)" transform="translate(48 350)">
+    <rect width="504" height="214" rx="20" fill="#fffdf9"/>
+    <rect x="24" y="24" width="92" height="28" rx="14" fill="#e3f0ec"/><text x="70" y="43" font-size="14" font-weight="600" fill="#1f5f5b" text-anchor="middle">Delivery</text>
+    <text x="24" y="88" font-size="24" font-weight="700" fill="#13221d">Parcel arriving Friday</text>
+    <text x="24" y="116" font-size="16" fill="#5d6b65">You're free after 6 pm · nobody else home</text>
+    <g transform="translate(24 146)" font-size="15" fill="#13221d">
+      <path d="M14 22H160M174 22H320" stroke="#c9d9d4" stroke-width="3"/>
+      <circle cx="14" cy="22" r="10" fill="#1f5f5b"/><text x="0" y="56">Check slot</text>
+      <circle cx="167" cy="22" r="10" fill="#1f5f5b"/><text x="138" y="56">Reschedule</text>
+      <circle cx="320" cy="22" r="10" fill="#fffdf9" stroke="#1f5f5b" stroke-width="3"/><text x="292" y="56">Collect</text>
+    </g>
+  </g>
+
+  <g filter="url(#sh)" transform="translate(48 596)">
+    <rect width="504" height="128" rx="20" fill="#174a47"/>
+    <circle cx="44" cy="64" r="16" fill="#f2b84b"/>
+    <text x="78" y="56" font-size="21" font-weight="700" fill="#fffdf9">New plan ready</text>
+    <text x="78" y="86" font-size="17" fill="#cfe3dd">Nothing changes until you approve it</text>
+    <text x="78" y="110" font-size="17" fill="#cfe3dd">in the HomeRelay app.</text>
+  </g>
+
+  <g transform="translate(48 764)">
+    <rect width="504" height="84" rx="42" fill="#fffdf9" stroke="#d8cfb8" stroke-width="2"/>
+    <text x="252" y="52" font-size="22" fill="#13221d" text-anchor="middle" font-style="italic">“I'm free after six on Friday.”</text>
+  </g>
+</svg>

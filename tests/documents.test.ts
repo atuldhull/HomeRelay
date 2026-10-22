@@ -258,3 +258,31 @@ describe("automatic category", () => {
     expect(guessCategory("billing.txt", "text")).toBe("other"); // whole words only for "bill"
   });
 });
+
+describe("concurrent uploads and storage quota", () => {
+  it("two simultaneous uploads of the same file store it once; the other gets DUPLICATE, not an internal error", async () => {
+    const db = openDb(":memory:"); const dir = tmpDir("hr-race-");
+    const docs = new DocumentService(db, { dir, maxBytes: 64 * 1024 });
+    const bytes = makePdf(["Same warranty card, uploaded twice at once"]);
+    const results = await Promise.allSettled([docs.ingest({ bytes, filename: "a.pdf" }), docs.ingest({ bytes, filename: "b.pdf" })]);
+    const ok = results.filter((r) => r.status === "fulfilled");
+    const failed = results.filter((r): r is PromiseRejectedResult => r.status === "rejected");
+    expect(ok).toHaveLength(1);
+    expect(failed).toHaveLength(1);
+    expect(failed[0].reason).toBeInstanceOf(DomainError);
+    expect((failed[0].reason as DomainError).code).toBe("DUPLICATE");
+    expect((db.prepare("SELECT COUNT(*) AS n FROM documents").get() as { n: number }).n).toBe(1);
+    expect(fs.readdirSync(dir)).toHaveLength(1); // the losing upload's file was removed
+  });
+
+  it("refuses an upload that would exceed the total storage quota, and stores nothing", async () => {
+    const db = openDb(":memory:"); const dir = tmpDir("hr-quota-");
+    const docs = new DocumentService(db, { dir, maxBytes: 64 * 1024, maxTotalBytes: 100 });
+    await docs.ingest({ bytes: Buffer.from("x".repeat(60)), filename: "first.txt" });
+    const err = await docs.ingest({ bytes: Buffer.from("y".repeat(60)), filename: "second.txt" }).catch((e) => e);
+    expect(err).toBeInstanceOf(DomainError);
+    expect(err.code).toBe("STORAGE_FULL");
+    expect((db.prepare("SELECT COUNT(*) AS n FROM documents").get() as { n: number }).n).toBe(1);
+    expect(fs.readdirSync(dir)).toHaveLength(1);
+  });
+});

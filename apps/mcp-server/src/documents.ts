@@ -112,7 +112,8 @@ const normTags = (tags: unknown): string[] => {
   return out;
 };
 
-export interface DocumentServiceOptions { dir: string; maxBytes?: number; now?: () => Date }
+export const DEFAULT_MAX_TOTAL_BYTES = 2 * 1024 * 1024 * 1024; // 2 GiB of stored files
+export interface DocumentServiceOptions { dir: string; maxBytes?: number; /** total size of all stored files */ maxTotalBytes?: number; now?: () => Date }
 export interface IngestInput {
   bytes: Buffer; filename: string; declaredMime?: string;
   category?: DocumentCategory; title?: string; tags?: string[]; description?: string; situation_id?: string | null;
@@ -121,10 +122,12 @@ export interface IngestInput {
 export class DocumentService {
   readonly dir: string;
   readonly maxBytes: number;
+  readonly maxTotalBytes: number;
   private now: () => Date;
   constructor(private db: Db, opts: DocumentServiceOptions) {
     this.dir = path.resolve(opts.dir);
     this.maxBytes = opts.maxBytes ?? DEFAULT_MAX_BYTES;
+    this.maxTotalBytes = opts.maxTotalBytes ?? DEFAULT_MAX_TOTAL_BYTES;
     this.now = opts.now ?? (() => new Date());
     fs.mkdirSync(this.dir, { recursive: true });
   }
@@ -263,6 +266,15 @@ export class DocumentService {
     this.db.prepare("INSERT INTO documents_fts (document_id, page, field, content) VALUES (?, 0, 'meta', ?)").run(id, content);
   }
 
+  /** Duplicate, quota and target checks; run before the slow work and again inside the write transaction. */
+  private checkBeforeStore(sha256: string, size: number, situationId?: string | null) {
+    const dup = this.db.prepare("SELECT id, title FROM documents WHERE sha256=?").get(sha256) as { id: string; title: string } | undefined;
+    if (dup) throw new DomainError("DUPLICATE", `This exact file is already stored as "${dup.title}".`, { document_id: dup.id });
+    const used = (this.db.prepare("SELECT COALESCE(SUM(size_bytes), 0) AS n FROM documents").get() as { n: number }).n;
+    if (used + size > this.maxTotalBytes) throw new DomainError("STORAGE_FULL", `The document vault is full (${Math.round(this.maxTotalBytes / 1024 / 1024)} MB limit). Delete documents you no longer need, or raise DOCUMENT_STORAGE_MAX_MB.`);
+    if (situationId) this.requireSituation(situationId);
+  }
+
   async ingest(input: IngestInput, actor: Actor = "user"): Promise<DocumentSummary> {
     const bytes = input.bytes;
     if (!bytes?.length) throw new DomainError("INVALID_FILE", "The file is empty.");
@@ -275,9 +287,7 @@ export class DocumentService {
     const title = (input.title?.trim() || filename.replace(/\.[^.]+$/, "")).slice(0, 200);
     const description = (input.description ?? "").slice(0, 2000);
     const sha256 = createHash("sha256").update(bytes).digest("hex");
-    const dup = this.db.prepare("SELECT id, title FROM documents WHERE sha256=?").get(sha256) as { id: string; title: string } | undefined;
-    if (dup) throw new DomainError("DUPLICATE", `This exact file is already stored as "${dup.title}".`, { document_id: dup.id });
-    if (input.situation_id) this.requireSituation(input.situation_id);
+    this.checkBeforeStore(sha256, bytes.length, input.situation_id);
 
     const ex = await extract(kind, bytes);
     const capped = capPages(ex.pages);
@@ -291,6 +301,9 @@ export class DocumentService {
     fs.renameSync(tmp, file);
     try {
       this.db.transaction(() => {
+        // re-checked inside the write transaction: extraction above is async, so another upload of the
+        // same file (or one that fills the quota, or deletes the situation) may have committed meanwhile
+        this.checkBeforeStore(sha256, bytes.length, input.situation_id);
         const t = this.ts();
         this.db.prepare(`INSERT INTO documents (id,title,original_filename,storage_key,mime_type,kind,size_bytes,sha256,category,tags_json,description,notes,extraction_status,extraction_note,page_count,text_chars,created_at,updated_at)
           VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`).run(id, title, filename, storageKey, mime, kind, bytes.length, sha256, category, JSON.stringify(tags), description, "", ex.status, note, ex.pageCount, textChars, t, t);
